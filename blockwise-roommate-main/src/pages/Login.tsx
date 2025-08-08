@@ -25,8 +25,10 @@ const Login = () => {
       if (res.data.user && res.data.user.role) {
         localStorage.setItem("role", res.data.user.role);
       }
-  // Force reload so components recognize login state
-  window.location.href = "/";
+      // Redirect to homepage after short delay
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     }
