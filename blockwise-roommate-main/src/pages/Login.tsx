@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Navigation } from "@/components/ui/navigation";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +19,13 @@ const Login = () => {
     try {
       const res = await axios.post("/api/auth/login", { email, password });
       setSuccess("Login successful!");
-      // You can store token or redirect here
+      // Save token and user info
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
+      // Redirect to homepage after short delay
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     }
