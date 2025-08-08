@@ -22,10 +22,11 @@ const Login = () => {
       // Save token and user info
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-      // Redirect to homepage after short delay
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      if (res.data.user && res.data.user.role) {
+        localStorage.setItem("role", res.data.user.role);
+      }
+  // Force reload so components recognize login state
+  window.location.href = "/";
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     }

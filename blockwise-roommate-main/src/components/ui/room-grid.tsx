@@ -24,8 +24,9 @@ export const RoomGrid = () => {
   const [selectedBlock, setSelectedBlock] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const { toast } = useToast();
-    // Simple login state (replace with real auth in production)
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // Check login state from localStorage
+  const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token') ? true : false;
+  const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
 
   const filteredRooms = mockRooms.filter(room => {
     const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,10 +120,12 @@ export const RoomGrid = () => {
         {/* Room Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredRooms.map((room) => (
-              <RoomCard
-                key={room.id}
-                room={room}
-                onRequest={isLoggedIn ? handleRoomRequest : undefined}
+            <RoomCard
+              key={room.id}
+              room={room}
+              onRequest={isLoggedIn ? handleRoomRequest : undefined}
+              isLoggedIn={isLoggedIn}
+              showTeacherActions={isLoggedIn && userRole === "teacher"}
             />
           ))}
         </div>

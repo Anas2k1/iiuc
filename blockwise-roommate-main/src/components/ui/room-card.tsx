@@ -17,13 +17,12 @@ interface RoomCardProps {
     hasProjector: boolean;
   };
   onRequest?: (roomId: string) => void;
-  isLoggedIn?: boolean;
+  isLoggedIn: boolean;
+  showTeacherActions?: boolean;
 }
 
-export const RoomCard = ({ room, onRequest }: RoomCardProps) => {
+export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions }: RoomCardProps) => {
   const isVacant = room.status === 'vacant';
-  const isLoggedIn = typeof window !== 'undefined' && (window as any).isLoggedIn !== undefined ? (window as any).isLoggedIn : true;
-  
   return (
     <Card className={cn(
       "room-card cursor-pointer",
@@ -66,15 +65,24 @@ export const RoomCard = ({ room, onRequest }: RoomCardProps) => {
             Available at {room.nextAvailable}
           </div>
         )}
-        
-        <Button 
-          className="w-full" 
-          variant={isVacant ? "default" : "secondary"}
-          disabled={!isVacant || !onRequest}
-          onClick={() => onRequest && onRequest(room.id)}
-        >
-          {isVacant ? (onRequest ? 'Request Room' : 'Login to Request') : 'Not Available'}
-        </Button>
+        {/* Student: Request Room */}
+        {!showTeacherActions && (
+          <Button 
+            className="w-full" 
+            variant={isVacant ? "default" : "secondary"}
+            disabled={!isVacant || !isLoggedIn || !onRequest}
+            onClick={() => onRequest && onRequest(room.id)}
+          >
+            {isVacant ? (isLoggedIn ? 'Request Room' : 'Login to Request') : 'Not Available'}
+          </Button>
+        )}
+        {/* Teacher: Accept/Reject Room Request (UI only, needs backend integration) */}
+        {showTeacherActions && (
+          <div className="flex gap-2">
+            <Button className="w-1/2" variant="default" onClick={() => alert('Accepted!')}>Accept</Button>
+            <Button className="w-1/2" variant="destructive" onClick={() => alert('Rejected!')}>Reject</Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

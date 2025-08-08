@@ -16,8 +16,10 @@ const Register = () => {
     setError("");
     setSuccess("");
     try {
-      const res = await axios.post("/api/auth/register", { name, email, password });
-      setSuccess(res.data.message || "Registration successful!");
+  const res = await axios.post("/api/auth/register", { name, email, password, role });
+  setSuccess(res.data.message || "Registration successful!");
+  // Save role in localStorage
+  localStorage.setItem("role", role);
     } catch (err: any) {
       setError(err.response?.data?.message || "Registration failed");
     }
