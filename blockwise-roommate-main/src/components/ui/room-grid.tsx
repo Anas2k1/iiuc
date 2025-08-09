@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RoomCard } from "./room-card";
 import { Button } from "./button";
 import { Badge } from "./badge";
@@ -7,19 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for rooms
-const mockRooms = [
-  { id: '1', name: 'Room 101', block: 'A', capacity: 30, status: 'vacant' as const, floor: 1, hasWifi: true, hasProjector: true },
-  { id: '2', name: 'Room 102', block: 'A', capacity: 45, status: 'occupied' as const, nextAvailable: '2:00 PM', floor: 1, hasWifi: true, hasProjector: false },
-  { id: '3', name: 'Room 201', block: 'A', capacity: 60, status: 'vacant' as const, floor: 2, hasWifi: true, hasProjector: true },
-  { id: '4', name: 'Room 301', block: 'B', capacity: 25, status: 'vacant' as const, floor: 3, hasWifi: false, hasProjector: true },
-  { id: '5', name: 'Room 401', block: 'B', capacity: 40, status: 'occupied' as const, nextAvailable: '4:30 PM', floor: 4, hasWifi: true, hasProjector: true },
-  { id: '6', name: 'Lab 501', block: 'C', capacity: 35, status: 'vacant' as const, floor: 5, hasWifi: true, hasProjector: false },
-  { id: '7', name: 'Auditorium', block: 'D', capacity: 200, status: 'occupied' as const, nextAvailable: '6:00 PM', floor: 1, hasWifi: true, hasProjector: true },
-  { id: '8', name: 'Room 105', block: 'A', capacity: 50, status: 'vacant' as const, floor: 1, hasWifi: true, hasProjector: true },
-];
+import { fetchRooms } from "@/lib/roomApi";
 
 export const RoomGrid = () => {
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBlock, setSelectedBlock] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -28,12 +20,18 @@ export const RoomGrid = () => {
   const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token') ? true : false;
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
 
-  const filteredRooms = mockRooms.filter(room => {
-    const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         room.block.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchRooms()
+      .then(data => setRooms(data))
+      .catch(() => toast({ title: 'Failed to load rooms', variant: 'destructive' }))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredRooms = rooms.filter(room => {
+    const matchesSearch = room.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      room.block?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesBlock = selectedBlock === "all" || room.block === selectedBlock;
     const matchesStatus = selectedStatus === "all" || room.status === selectedStatus;
-    
     return matchesSearch && matchesBlock && matchesStatus;
   });
 
@@ -118,17 +116,30 @@ export const RoomGrid = () => {
         </div>
 
         {/* Room Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredRooms.map((room) => (
-            <RoomCard
-              key={room.id}
-              room={room}
-              onRequest={isLoggedIn ? handleRoomRequest : undefined}
-              isLoggedIn={isLoggedIn}
-              showTeacherActions={isLoggedIn && userRole === "teacher"}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-10">Loading rooms...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredRooms.map((room) => (
+              <RoomCard
+                key={room._id || room.id}
+                isLoggedIn={isLoggedIn}
+                showTeacherActions={isLoggedIn && userRole === "teacher"}
+                room={{
+                  id: room._id || room.id,
+                  name: room.name,
+                  block: room.block || '',
+                  capacity: room.capacity,
+                  status: room.status || 'vacant',
+                  nextAvailable: room.nextAvailable,
+                  floor: room.floor || 1,
+                  hasWifi: room.hasWifi || false,
+                  hasProjector: room.hasProjector || false,
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {filteredRooms.length === 0 && (
           <div className="text-center py-12">

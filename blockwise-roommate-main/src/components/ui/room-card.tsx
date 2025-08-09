@@ -1,4 +1,9 @@
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogTrigger, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { createBooking } from "@/lib/bookingApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Users, Wifi } from "lucide-react";
@@ -22,7 +27,37 @@ interface RoomCardProps {
 }
 
 export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions }: RoomCardProps) => {
-  const isVacant = room.status === 'vacant';
+  const [open, setOpen] = useState(false);
+  const [date, setDate] = useState("");
+  const [timeSlot, setTimeSlot] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [localStatus, setLocalStatus] = useState(room.status);
+  const { toast } = useToast();
+  const isVacant = localStatus === 'vacant';
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await createBooking({ room: room.id, date, timeSlot });
+      setLocalStatus('occupied');
+      setOpen(false);
+      toast({
+        title: 'Booking Successful',
+        description: `Room ${room.name} booked for ${date} (${timeSlot})`,
+        variant: 'success',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Booking Failed',
+        description: err?.response?.data?.message || 'Could not book the room. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <Card className={cn(
       "room-card cursor-pointer",
@@ -67,14 +102,38 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions }: Ro
         )}
         {/* Student: Request Room */}
         {!showTeacherActions && (
-          <Button 
-            className="w-full" 
-            variant={isVacant ? "default" : "secondary"}
-            disabled={!isVacant || !isLoggedIn || !onRequest}
-            onClick={() => onRequest && onRequest(room.id)}
-          >
-            {isVacant ? (isLoggedIn ? 'Request Room' : 'Login to Request') : 'Not Available'}
-          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="w-full"
+                variant={isVacant ? "default" : "secondary"}
+                disabled={!isVacant || !isLoggedIn}
+              >
+                {isVacant ? (isLoggedIn ? 'Request Room' : 'Login to Request') : 'Not Available'}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <h3 className="text-lg font-semibold mb-2">Book {room.name}</h3>
+                <div>
+                  <label className="block mb-1">Date</label>
+                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
+                </div>
+                <div>
+                  <label className="block mb-1">Time Slot</label>
+                  <Input type="text" placeholder="e.g. 09:00-10:00" value={timeSlot} onChange={e => setTimeSlot(e.target.value)} required />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <DialogClose asChild>
+                    <Button type="button" variant="secondary">Cancel</Button>
+                  </DialogClose>
+                  <Button type="submit" disabled={submitting || !date || !timeSlot}>
+                    {submitting ? 'Booking...' : 'Book Room'}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
         )}
         {/* Teacher: Accept/Reject Room Request (UI only, needs backend integration) */}
         {showTeacherActions && (
