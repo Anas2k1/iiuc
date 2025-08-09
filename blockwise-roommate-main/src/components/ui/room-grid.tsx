@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { RoomCard } from "./room-card";
 import { Button } from "./button";
 import { Badge } from "./badge";
@@ -20,12 +20,18 @@ export const RoomGrid = () => {
   const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token') ? true : false;
   const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
 
-  useEffect(() => {
+
+  const loadRooms = useCallback(() => {
+    setLoading(true);
     fetchRooms()
       .then(data => setRooms(data))
       .catch(() => toast({ title: 'Failed to load rooms', variant: 'destructive' }))
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
+
+  useEffect(() => {
+    loadRooms();
+  }, [loadRooms]);
 
   const filteredRooms = rooms.filter(room => {
     const matchesSearch = room.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,6 +142,7 @@ export const RoomGrid = () => {
                   hasWifi: room.hasWifi || false,
                   hasProjector: room.hasProjector || false,
                 }}
+                onBooked={loadRooms}
               />
             ))}
           </div>

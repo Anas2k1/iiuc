@@ -24,9 +24,10 @@ interface RoomCardProps {
   onRequest?: (roomId: string) => void;
   isLoggedIn: boolean;
   showTeacherActions?: boolean;
+  onBooked?: () => void;
 }
 
-export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions }: RoomCardProps) => {
+export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBooked }: RoomCardProps) => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
@@ -42,10 +43,11 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions }: Ro
       await createBooking({ room: room.id, date, timeSlot });
       setLocalStatus('occupied');
       setOpen(false);
+      if (onBooked) onBooked();
       toast({
         title: 'Booking Successful',
         description: `Room ${room.name} booked for ${date} (${timeSlot})`,
-        variant: 'success',
+        variant: 'default',
       });
     } catch (err: any) {
       toast({
