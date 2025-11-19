@@ -5,7 +5,14 @@ module.exports = (req, res, next) => {
   if (!token) return res.status(401).json({ message: 'No token, authorization denied' });
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.userId;
+    
+    // Support both user and admin tokens
+    if (decoded.userId) {
+      req.user = decoded.userId;
+    } else if (decoded.adminId) {
+      req.admin = decoded.adminId;
+    }
+    
     next();
   } catch (err) {
     res.status(401).json({ message: 'Token is not valid' });

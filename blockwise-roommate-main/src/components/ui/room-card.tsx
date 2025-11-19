@@ -102,16 +102,16 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBo
             Available at {room.nextAvailable}
           </div>
         )}
-        {/* Student: Request Room */}
-        {!showTeacherActions && (
+        {/* Student: Request Room - Only show if logged in */}
+        {!showTeacherActions && isLoggedIn && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button
                 className="w-full"
                 variant={isVacant ? "default" : "secondary"}
-                disabled={!isVacant || !isLoggedIn}
+                disabled={!isVacant}
               >
-                {isVacant ? (isLoggedIn ? 'Request Room' : 'Login to Request') : 'Not Available'}
+                {isVacant ? 'Request Room' : 'Not Available'}
               </Button>
             </DialogTrigger>
             <DialogContent>

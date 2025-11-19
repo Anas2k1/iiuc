@@ -18,12 +18,36 @@ export const Navigation = () => {
     } else {
       setUser(null);
     }
+
+    // Listen for auth changes to update user display
+    const handleAuthChange = () => {
+      const newStoredUser = localStorage.getItem("user");
+      if (newStoredUser) {
+        try {
+          setUser(JSON.parse(newStoredUser));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+
+    window.addEventListener('auth-changed', handleAuthChange);
+    return () => window.removeEventListener('auth-changed', handleAuthChange);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("role");
+    localStorage.removeItem("admin");
     setUser(null);
+    
+    // Dispatch event to notify other components about logout
+    window.dispatchEvent(new Event('auth-changed'));
+    
     navigate("/login");
   };
 

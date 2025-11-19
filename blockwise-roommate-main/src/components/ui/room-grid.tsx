@@ -15,11 +15,28 @@ export const RoomGrid = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBlock, setSelectedBlock] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const { toast } = useToast();
-  // Check login state from localStorage
-  const isLoggedIn = typeof window !== 'undefined' && localStorage.getItem('token') ? true : false;
-  const userRole = typeof window !== 'undefined' ? localStorage.getItem('role') : null;
 
+  // Check login state on mount and listen for custom auth change events
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    setIsLoggedIn(!!token);
+    setUserRole(role);
+
+    // Listen for auth change events from Login page
+    const handleAuthChange = () => {
+      const newToken = localStorage.getItem('token');
+      const newRole = localStorage.getItem('role');
+      setIsLoggedIn(!!newToken);
+      setUserRole(newRole);
+    };
+
+    window.addEventListener('auth-changed', handleAuthChange);
+    return () => window.removeEventListener('auth-changed', handleAuthChange);
+  }, []);
 
   const loadRooms = useCallback(() => {
     setLoading(true);
