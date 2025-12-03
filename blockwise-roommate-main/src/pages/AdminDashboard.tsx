@@ -313,7 +313,7 @@ const AdminDashboard = () => {
           
           {/* Search Input */}
           {approvedUsers.length > 0 && (
-            <div className="mb-4">
+            <div className="mb-6">
               <Input
                 type="text"
                 placeholder="Search by username or email..."
@@ -329,39 +329,48 @@ const AdminDashboard = () => {
               No approved users yet
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {approvedUsers
                 .filter((user) =>
                   user.name.toLowerCase().includes(approvedUserSearch.toLowerCase()) ||
                   user.email.toLowerCase().includes(approvedUserSearch.toLowerCase())
                 )
                 .map((user) => (
-                <Card key={user._id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{user.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                <Card key={user._id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{user.name}</CardTitle>
+                          <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
+                        </div>
+                        <Badge className="capitalize flex-shrink-0">
+                          {user.role}
+                        </Badge>
                       </div>
-                      <Badge className="capitalize">
-                        {user.role}
-                      </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-2">
-                    <Button
-                      onClick={() => openEditDialog(user)}
-                      className="w-full"
-                    >
-                      Edit User
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteUser(user._id, user.name)}
-                      className="w-full"
-                    >
-                      Delete User
-                    </Button>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="text-sm text-muted-foreground">
+                      <p><span className="font-semibold">Status:</span> Approved</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => openEditDialog(user)}
+                        className="flex-1 text-sm"
+                        size="sm"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteUser(user._id, user.name)}
+                        className="flex-1 text-sm"
+                        size="sm"
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -369,8 +378,8 @@ const AdminDashboard = () => {
                 user.name.toLowerCase().includes(approvedUserSearch.toLowerCase()) ||
                 user.email.toLowerCase().includes(approvedUserSearch.toLowerCase())
               ).length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
-                  No users found matching your search
+                <div className="col-span-full text-center text-muted-foreground py-12">
+                  <p className="text-lg">No users found matching your search</p>
                 </div>
               )}
             </div>
