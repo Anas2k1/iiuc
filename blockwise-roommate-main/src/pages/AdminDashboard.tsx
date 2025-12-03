@@ -20,6 +20,17 @@ const AdminDashboard = () => {
   const [editPassword, setEditPassword] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [approvedUserSearch, setApprovedUserSearch] = useState("");
+  const [showRoutineDialog, setShowRoutineDialog] = useState(false);
+  const [routine, setRoutine] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [currentRoutineEntry, setCurrentRoutineEntry] = useState({
+    day: 'Sunday',
+    time: '',
+    course: '',
+    teacher: '',
+    roomId: ''
+  });
+  const [routineLoading, setRoutineLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -34,6 +45,8 @@ const AdminDashboard = () => {
   // Fetch pending and approved users
   useEffect(() => {
     fetchUsers();
+    fetchRooms();
+    fetchRoutine();
   }, []);
 
   const fetchUsers = async () => {
@@ -61,6 +74,34 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRooms = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/rooms", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRooms(response.data);
+    } catch (err) {
+      console.error("Failed to fetch rooms", err);
+    }
+  };
+
+  const fetchRoutine = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("http://localhost:5000/api/schedules", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setRoutine(response.data);
+    } catch (err) {
+      console.error("Failed to fetch routine", err);
     }
   };
 
@@ -227,6 +268,73 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleAddRoutineEntry = () => {
+    if (!currentRoutineEntry.time || !currentRoutineEntry.course || !currentRoutineEntry.teacher || !currentRoutineEntry.roomId) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setRoutine([...routine, { ...currentRoutineEntry }]);
+    setCurrentRoutineEntry({
+      day: 'Sunday',
+      time: '',
+      course: '',
+      teacher: '',
+      roomId: ''
+    });
+  };
+
+  const handleRemoveRoutineEntry = (index: number) => {
+    setRoutine(routine.filter((_, i) => i !== index));
+  };
+
+  const handleSaveRoutine = async () => {
+    if (routine.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one routine entry",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setRoutineLoading(true);
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        "http://localhost:5000/api/schedules/update-routine",
+        { routineData: routine },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      toast({
+        title: "Success",
+        description: "Routine updated successfully and rooms auto-booked",
+      });
+
+      setShowRoutineDialog(false);
+      setRoutine([]);
+      fetchRoutine();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to update routine",
+        variant: "destructive",
+      });
+    } finally {
+      setRoutineLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -386,6 +494,52 @@ const AdminDashboard = () => {
           )}
         </div>
 
+        {/* Routine Management Section */}
+        <div className="mt-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Class Routine Management</h2>
+            <Button onClick={() => setShowRoutineDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+              Edit Routine
+            </Button>
+          </div>
+
+          {routine.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              <p>No routine entries yet. Click "Edit Routine" to add one.</p>
+            </div>
+          ) : (
+            <div className="bg-background rounded-lg shadow p-8">
+              <div className="overflow-x-auto">
+                <table className="min-w-full border text-left">
+                  <thead>
+                    <tr>
+                      <th className="border px-4 py-2">Day</th>
+                      <th className="border px-4 py-2">Time</th>
+                      <th className="border px-4 py-2">Course</th>
+                      <th className="border px-4 py-2">Teacher</th>
+                      <th className="border px-4 py-2">Room</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {routine.map((item, idx) => {
+                      const room = rooms.find(r => r._id === item.room?._id || r._id === item.roomId);
+                      return (
+                        <tr key={idx}>
+                          <td className="border px-4 py-2">{item.day}</td>
+                          <td className="border px-4 py-2">{item.time}</td>
+                          <td className="border px-4 py-2">{item.course}</td>
+                          <td className="border px-4 py-2">{item.teacher}</td>
+                          <td className="border px-4 py-2">{room?.name || 'Unknown'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Edit User Dialog */}
         <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
           <DialogContent>
@@ -430,6 +584,125 @@ const AdminDashboard = () => {
               </Button>
               <Button onClick={handleEditUser} disabled={editLoading}>
                 {editLoading ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Routine Management Dialog */}
+        <Dialog open={showRoutineDialog} onOpenChange={setShowRoutineDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manage Class Routine</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Add new entry */}
+              <div className="border-b pb-4">
+                <h3 className="font-semibold mb-3">Add Routine Entry</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1 font-medium text-sm">Day</label>
+                    <select
+                      value={currentRoutineEntry.day}
+                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, day: e.target.value })}
+                      className="w-full px-3 py-2 border rounded text-sm"
+                    >
+                      {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                        <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block mb-1 font-medium text-sm">Time (e.g., 09:00 - 10:30)</label>
+                    <input
+                      type="text"
+                      placeholder="HH:MM - HH:MM"
+                      value={currentRoutineEntry.time}
+                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, time: e.target.value })}
+                      className="w-full px-3 py-2 border rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 font-medium text-sm">Course Code</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., CSE101"
+                      value={currentRoutineEntry.course}
+                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, course: e.target.value })}
+                      className="w-full px-3 py-2 border rounded text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 font-medium text-sm">Teacher Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g., Dr. Ahmed"
+                      value={currentRoutineEntry.teacher}
+                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, teacher: e.target.value })}
+                      className="w-full px-3 py-2 border rounded text-sm"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block mb-1 font-medium text-sm">Room</label>
+                    <select
+                      value={currentRoutineEntry.roomId}
+                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, roomId: e.target.value })}
+                      className="w-full px-3 py-2 border rounded text-sm"
+                    >
+                      <option value="">Select a room</option>
+                      {rooms.map(room => (
+                        <option key={room._id} value={room._id}>{room.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <Button onClick={handleAddRoutineEntry} className="w-full mt-3">
+                  Add Entry
+                </Button>
+              </div>
+
+              {/* Current routine entries */}
+              <div>
+                <h3 className="font-semibold mb-3">Current Routine ({routine.length} entries)</h3>
+                {routine.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No entries added yet</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {routine.map((entry, idx) => {
+                      const room = rooms.find(r => r._id === entry.roomId);
+                      return (
+                        <div key={idx} className="flex justify-between items-start p-3 border rounded bg-muted/50">
+                          <div className="flex-1 text-sm">
+                            <p className="font-medium">{entry.day} • {entry.time}</p>
+                            <p className="text-muted-foreground">{entry.course} - {entry.teacher}</p>
+                            <p className="text-xs text-muted-foreground">{room?.name || 'Unknown Room'}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveRoutineEntry(idx)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setShowRoutineDialog(false);
+                setRoutine([]);
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveRoutine} disabled={routineLoading} className="bg-blue-600 hover:bg-blue-700">
+                {routineLoading ? "Saving..." : "Save & Auto-Book Rooms"}
               </Button>
             </DialogFooter>
           </DialogContent>
