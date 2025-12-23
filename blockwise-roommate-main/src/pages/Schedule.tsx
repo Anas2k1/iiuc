@@ -94,6 +94,7 @@ const Schedule = () => {
                   <tr>
                     <th className="border px-4 py-2">Day</th>
                     <th className="border px-4 py-2">Time</th>
+                    <th className="border px-4 py-2">Block</th>
                     <th className="border px-4 py-2">Course</th>
                     <th className="border px-4 py-2">Room</th>
                     <th className="border px-4 py-2">Teacher</th>
@@ -128,6 +129,7 @@ const Schedule = () => {
                       <tr key={idx}>
                         <td className="border px-4 py-2">{item.day}</td>
                         <td className="border px-4 py-2">{item.time}</td>
+                        <td className="border px-4 py-2">{item.block ? `Block ${item.block}` : 'Block A'}</td>
                         <td className="border px-4 py-2">{item.course}</td>
                         <td className="border px-4 py-2">{roomName}</td>
                         <td className="border px-4 py-2">{item.teacher}</td>

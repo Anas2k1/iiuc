@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import TimePicker from 'react-time-picker';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
+import { Clock } from "lucide-react";
 
 const AdminDashboard = () => {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
@@ -28,8 +32,11 @@ const AdminDashboard = () => {
     time: '',
     course: '',
     teacher: '',
-    roomId: ''
+    roomId: '',
+    block: ''
   });
+  const [routineStartTime, setRoutineStartTime] = useState<string | null>(null);
+  const [routineEndTime, setRoutineEndTime] = useState<string | null>(null);
   const [routineLoading, setRoutineLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -269,7 +276,7 @@ const AdminDashboard = () => {
   };
 
   const handleAddRoutineEntry = () => {
-    if (!currentRoutineEntry.time || !currentRoutineEntry.course || !currentRoutineEntry.teacher || !currentRoutineEntry.roomId) {
+    if (!routineStartTime || !routineEndTime || !currentRoutineEntry.course || !currentRoutineEntry.teacher || !currentRoutineEntry.roomId || !currentRoutineEntry.block) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -278,14 +285,17 @@ const AdminDashboard = () => {
       return;
     }
     
-    setRoutine([...routine, { ...currentRoutineEntry }]);
+    setRoutine([...routine, { ...currentRoutineEntry, time: `${routineStartTime}-${routineEndTime}` }]);
     setCurrentRoutineEntry({
       day: 'Sunday',
       time: '',
       course: '',
       teacher: '',
-      roomId: ''
+      roomId: '',
+      block: ''
     });
+    setRoutineStartTime(null);
+    setRoutineEndTime(null);
   };
 
   const handleRemoveRoutineEntry = (index: number) => {
@@ -515,6 +525,7 @@ const AdminDashboard = () => {
                     <tr>
                       <th className="border px-4 py-2">Day</th>
                       <th className="border px-4 py-2">Time</th>
+                      <th className="border px-4 py-2">Block</th>
                       <th className="border px-4 py-2">Course</th>
                       <th className="border px-4 py-2">Teacher</th>
                       <th className="border px-4 py-2">Room</th>
@@ -527,6 +538,7 @@ const AdminDashboard = () => {
                         <tr key={idx}>
                           <td className="border px-4 py-2">{item.day}</td>
                           <td className="border px-4 py-2">{item.time}</td>
+                          <td className="border px-4 py-2">Block {item.block}</td>
                           <td className="border px-4 py-2">{item.course}</td>
                           <td className="border px-4 py-2">{item.teacher}</td>
                           <td className="border px-4 py-2">{room?.name || 'Unknown'}</td>
@@ -602,26 +614,28 @@ const AdminDashboard = () => {
                 <h3 className="font-semibold mb-3">Add Routine Entry</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block mb-1 font-medium text-sm">Day</label>
+                    <label className="block mb-1 font-medium text-sm">Block</label>
                     <select
-                      value={currentRoutineEntry.day}
-                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, day: e.target.value })}
+                      value={currentRoutineEntry.block}
+                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, block: e.target.value })}
                       className="w-full px-3 py-2 border rounded text-sm"
                     >
-                      {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                        <option key={day} value={day}>{day}</option>
-                      ))}
+                      <option value="">Select a block</option>
+                      <option value="A">Block A</option>
+                      <option value="B">Block B</option>
+                      <option value="C">Block C</option>
+                      <option value="D">Block D</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block mb-1 font-medium text-sm">Time (e.g., 09:00 - 10:30)</label>
-                    <input
-                      type="text"
-                      placeholder="HH:MM - HH:MM"
-                      value={currentRoutineEntry.time}
-                      onChange={(e) => setCurrentRoutineEntry({ ...currentRoutineEntry, time: e.target.value })}
-                      className="w-full px-3 py-2 border rounded text-sm"
-                    />
+                  <div className="col-span-2 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block mb-1 font-medium text-sm">Start Time</label>
+                      <TimePicker onChange={setRoutineStartTime} value={routineStartTime} clockIcon={<Clock className="h-4 w-4" />} className="w-full" />
+                    </div>
+                    <div>
+                      <label className="block mb-1 font-medium text-sm">End Time</label>
+                      <TimePicker onChange={setRoutineEndTime} value={routineEndTime} clockIcon={<Clock className="h-4 w-4" />} className="w-full" />
+                    </div>
                   </div>
                   <div>
                     <label className="block mb-1 font-medium text-sm">Course Code</label>
@@ -676,7 +690,7 @@ const AdminDashboard = () => {
                           <div className="flex-1 text-sm">
                             <p className="font-medium">{entry.day} • {entry.time}</p>
                             <p className="text-muted-foreground">{entry.course} - {entry.teacher}</p>
-                            <p className="text-xs text-muted-foreground">{room?.name || 'Unknown Room'}</p>
+                            <p className="text-xs text-muted-foreground">Block {entry.block} • {room?.name || 'Unknown Room'}</p>
                           </div>
                           <Button
                             variant="ghost"

@@ -39,10 +39,10 @@ exports.updateRoutine = async (req, res) => {
     const autoBookings = [];
 
     for (const routine of routineData) {
-      const { day, time, course, teacher, roomId } = routine;
+      const { day, time, course, teacher, roomId, block } = routine;
 
       // Validate required fields
-      if (!day || !time || !course || !teacher || !roomId) {
+      if (!day || !time || !course || !teacher || !roomId || !block) {
         return res.status(400).json({ message: 'Missing required fields in routine data' });
       }
 
@@ -53,6 +53,7 @@ exports.updateRoutine = async (req, res) => {
         course,
         teacher,
         room: roomId,
+        block,
         updatedAt: new Date()
       });
 

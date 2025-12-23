@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, Users, Wifi } from "lucide-react";
 import { cn } from "@/lib/utils";
+import TimePicker from 'react-time-picker';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
 
 interface RoomCardProps {
   room: {
@@ -30,7 +33,8 @@ interface RoomCardProps {
 export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBooked }: RoomCardProps) => {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");
-  const [timeSlot, setTimeSlot] = useState("");
+  const [startTime, setStartTime] = useState<string | null>(null);
+  const [endTime, setEndTime] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [localStatus, setLocalStatus] = useState(room.status);
   const { toast } = useToast();
@@ -40,6 +44,7 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBo
     e.preventDefault();
     setSubmitting(true);
     try {
+      const timeSlot = startTime && endTime ? `${startTime}-${endTime}` : '';
       await createBooking({ room: room.id, date, timeSlot });
       setLocalStatus('occupied');
       setOpen(false);
@@ -107,7 +112,7 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBo
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button
-                className="w-full"
+                className="w-full hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
                 variant={isVacant ? "default" : "secondary"}
                 disabled={!isVacant}
               >
@@ -121,15 +126,22 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBo
                   <label className="block mb-1">Date</label>
                   <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
                 </div>
-                <div>
-                  <label className="block mb-1">Time Slot</label>
-                  <Input type="text" placeholder="e.g. 09:00-10:00" value={timeSlot} onChange={e => setTimeSlot(e.target.value)} required />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block mb-1">Start Time</label>
+                    <TimePicker onChange={setStartTime} value={startTime} clockIcon={<Clock className="h-4 w-4" />} className="w-full" />
+                  </div>
+                  <div>
+                    <label className="block mb-1">End Time</label>
+                    <TimePicker onChange={setEndTime} value={endTime} clockIcon={<Clock className="h-4 w-4" />} className="w-full" />
+                  </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
+                    <Button type="button" variant="secondary" className="hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl">Cancel</Button>
                   </DialogClose>
-                  <Button type="submit" disabled={submitting || !date || !timeSlot}>
+                  <Button type="submit" disabled={submitting || !date || !startTime || !endTime} className="hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group">
+                    <Clock className="mr-1 h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                     {submitting ? 'Booking...' : 'Book Room'}
                   </Button>
                 </div>
@@ -140,8 +152,14 @@ export const RoomCard = ({ room, onRequest, isLoggedIn, showTeacherActions, onBo
         {/* Teacher: Accept/Reject Room Request (UI only, needs backend integration) */}
         {showTeacherActions && (
           <div className="flex gap-2">
-            <Button className="w-1/2" variant="default" onClick={() => alert('Accepted!')}>Accept</Button>
-            <Button className="w-1/2" variant="destructive" onClick={() => alert('Rejected!')}>Reject</Button>
+            <Button className="w-1/2 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group" variant="default" onClick={() => alert('Accepted!')}>
+              <Users className="mr-1 h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
+              Accept
+            </Button>
+            <Button className="w-1/2 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group hover:bg-red-600" variant="destructive" onClick={() => alert('Rejected!')}>
+              <Clock className="mr-1 h-4 w-4 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+              Reject
+            </Button>
           </div>
         )}
       </CardContent>

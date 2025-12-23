@@ -4,13 +4,18 @@ import { fetchMyBookings, deleteBooking, updateBooking } from "@/lib/myBookingsA
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger, DialogContent, DialogClose } from "@/components/ui/dialog";
+import TimePicker from 'react-time-picker';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
+import { Clock } from "lucide-react";
 
 const Bookings = () => {
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editDate, setEditDate] = useState("");
-  const [editTimeSlot, setEditTimeSlot] = useState("");
+  const [editStartTime, setEditStartTime] = useState<string | null>(null);
+  const [editEndTime, setEditEndTime] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const loadBookings = async () => {
@@ -39,14 +44,18 @@ const Bookings = () => {
   const handleEdit = (booking: any) => {
     setEditId(booking._id);
     setEditDate(booking.date ? booking.date.substring(0, 10) : "");
-    setEditTimeSlot(booking.timeSlot || "");
+    const timeSlot = booking.timeSlot || "";
+    const [start, end] = timeSlot.split('-');
+    setEditStartTime(start || null);
+    setEditEndTime(end || null);
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editId) return;
     setSubmitting(true);
-    await updateBooking(editId, { date: editDate, timeSlot: editTimeSlot });
+    const timeSlot = editStartTime && editEndTime ? `${editStartTime}-${editEndTime}` : '';
+    await updateBooking(editId, { date: editDate, timeSlot });
     setEditId(null);
     setSubmitting(false);
     loadBookings();
@@ -82,15 +91,21 @@ const Bookings = () => {
                           <label className="block mb-1">Date</label>
                           <Input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} required />
                         </div>
-                        <div>
-                          <label className="block mb-1">Time Slot</label>
-                          <Input type="text" value={editTimeSlot} onChange={e => setEditTimeSlot(e.target.value)} required />
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block mb-1">Start Time</label>
+                            <TimePicker onChange={setEditStartTime} value={editStartTime} clockIcon={<Clock className="h-4 w-4" />} className="w-full" />
+                          </div>
+                          <div>
+                            <label className="block mb-1">End Time</label>
+                            <TimePicker onChange={setEditEndTime} value={editEndTime} clockIcon={<Clock className="h-4 w-4" />} className="w-full" />
+                          </div>
                         </div>
                         <div className="flex gap-2 justify-end">
                           <DialogClose asChild>
                             <Button type="button" variant="secondary">Cancel</Button>
                           </DialogClose>
-                          <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save'}</Button>
+                          <Button type="submit" disabled={submitting || !editStartTime || !editEndTime}>{submitting ? 'Saving...' : 'Save'}</Button>
                         </div>
                       </form>
                     </DialogContent>

@@ -49,13 +49,13 @@ export const HeroSection = () => {
           
           {/* CTA Buttons */}
           <div className="slide-in-right flex flex-col sm:flex-row gap-4 justify-center items-center" style={{ animationDelay: '0.6s' }}>
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleBrowseRooms}>
-              <Search className="mr-2 h-5 w-5" />
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 bg-accent text-accent-foreground hover:bg-accent/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group" onClick={handleBrowseRooms}>
+              <Search className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               Browse Rooms
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-white text-black hover:bg-white hover:text-primary" asChild>
+            <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-white text-black hover:bg-white hover:text-primary hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group" asChild>
               <Link to="/schedule">
-                <Calendar className="mr-2 h-5 w-5" />
+                <Calendar className="mr-2 h-5 w-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
                 View Schedule
               </Link>
             </Button>

@@ -80,7 +80,8 @@ export const RoomGrid = () => {
           </p>
             {!isLoggedIn && (
               <div className="mt-4">
-                <Button variant="outline" onClick={() => window.location.href = '/login'}>
+                <Button variant="outline" onClick={() => window.location.href = '/login'} className="hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group">
+                  <Search className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
                   Login to request a room
                 </Button>
               </div>
@@ -175,8 +176,9 @@ export const RoomGrid = () => {
                 setSelectedBlock("all");
                 setSelectedStatus("all");
               }}
-              className="mt-4"
+              className="mt-4 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl group"
             >
+              <Filter className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform duration-300" />
               Clear Filters
             </Button>
           </div>

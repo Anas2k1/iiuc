@@ -6,6 +6,7 @@ const ScheduleSchema = new mongoose.Schema({
   course: { type: String, required: true },
   teacher: { type: String, required: true },
   room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room', required: true },
+  block: { type: String, required: true }, // Block number (A, B, C, D)
   bookings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
